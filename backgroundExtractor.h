@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
+
 #ifndef NULL
 #define NULL 0
 #endif
@@ -41,7 +42,7 @@ class BackgroundExtractor
             
             Mat threshold1, threshold255, nonChanged;
             Mat newBestsMask, oldBestsMask, newBestRuns, oldBestRuns;
-            Mat stablePoints, unstablePoints;
+            Mat unstablePoints;
             Mat newBackImgPoints, oldBackImgPoints;
             
             if(!backImg.data) {
@@ -73,8 +74,8 @@ class BackgroundExtractor
             _perfection = perfection;
             
             if(nonZeroRatio < percentage) {
-                _perfection = 10;
-                printf("perfection = 5\n");
+                _perfection = 30;
+                printf("perfection = 10\n");
             }
             
             bitwise_and(currentRun, threshold255, nonChanged);
@@ -118,6 +119,7 @@ class BackgroundExtractor
         int perfection;
         float percentage;
         //int minFixedPixel;
+        Mat stablePoints;
         Mat prevImg;
         Mat backImg;
         Mat bestRun;
