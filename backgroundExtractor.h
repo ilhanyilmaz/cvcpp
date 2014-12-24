@@ -14,7 +14,7 @@ class BackgroundExtractor
             thresholdValue = _threshold;
             perfection = _perfection;
             showBackImg = _showBackImg;
-            percentage = 0.5;
+            percentage = 0.9;
             //minFixedPixel = 1000;
             nonZeroPoints = 1;
         }
@@ -22,9 +22,18 @@ class BackgroundExtractor
         void createWindow() {
             namedWindow("capture", CV_WINDOW_AUTOSIZE );
         }
+        
         void checkWindowSetting() {
             
         }
+        
+        Mat loop(Mat image) {
+            
+            if(!isDone())
+                feed(image);
+            return backImg;
+        }
+        
         void feed(Mat image) {
             
             int _perfection;
@@ -64,7 +73,7 @@ class BackgroundExtractor
             _perfection = perfection;
             
             if(nonZeroRatio < percentage) {
-                _perfection = 5;
+                _perfection = 10;
                 printf("perfection = 5\n");
             }
             
@@ -93,6 +102,14 @@ class BackgroundExtractor
                 imshow("backImage", backImg);
         }
         
+        bool isDone() {
+            
+            if(!backImg.data)
+                return false;
+                
+            float nonZeroRatio = (float)nonZeroPoints / (backImg.rows*backImg.cols);
+            return (nonZeroRatio<percentage)? false : true;
+        }
 
     private:
         bool showBackImg;

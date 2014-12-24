@@ -22,18 +22,22 @@ int main(int argc, char** argv )
     namedWindow("capture", CV_WINDOW_AUTOSIZE );
     
     BackgroundExtractor be(10,100,true);
-    Mat frame;
-    Mat gray;
+    Mat frame, gray;
+    Mat backImg, diffImg;
     
     while(true) {
         cap >> frame;
         if(!frame.data)
             return -1;
         cvtColor(frame, gray, CV_BGR2GRAY);
-        be.feed(gray);
         
-        //if(be.backImage.data)
-        //    imshow("capture", be.backImage);
+        backImg = be.loop(gray);
+        
+        absdiff(gray, backImg, diffImg);
+        
+        if(diffImg.data)
+            imshow("capture", diffImg);
+            
         if(waitKey(30) >= 0) break;
     }
     
