@@ -9,72 +9,102 @@ using namespace cv;
 class BackgroundExtractor
 {
     public:
-        BackgroundExtractor() {
+        BackgroundExtractor( int _threshold=10, int _perfection=100, bool _showBackImg=false) {
             //frameDistance = 1;
-            thresholdValue = 10;
-            perfection = 50;
-            //percentage = 0.995;
+            thresholdValue = _threshold;
+            perfection = _perfection;
+            showBackImg = _showBackImg;
+            percentage = 0.5;
             //minFixedPixel = 1000;
-            //nonZeroPoints = 1;
+            nonZeroPoints = 1;
         }
         
+        void createWindow() {
+            namedWindow("capture", CV_WINDOW_AUTOSIZE );
+        }
+        void checkWindowSetting() {
+            
+        }
         void feed(Mat image) {
-            if(!backImage.data) {
+            
+            int _perfection;
+            float nonZero, nonZeroRatio;
+            
+            Mat threshold1, threshold255, nonChanged;
+            Mat newBestsMask, oldBestsMask, newBestRuns, oldBestRuns;
+            Mat stablePoints, unstablePoints;
+            Mat newBackImgPoints, oldBackImgPoints;
+            
+            if(!backImg.data) {
                 
-                //diffImage = Mat(image.rows,image.cols,CV_8U);
-                backImage = image.clone();
-                
+                backImg = image.clone();
+                prevImg = image.clone();
+                bestRun = Mat(image.rows,image.cols, CV_8U,1);
+                currentRun = Mat(image.rows,image.cols,CV_8U, 1);
                 //minFixedPixel = int(image.rows*image.cols*percentage);
+                if(showBackImg) {
+                    createWindow();
+                    imshow("backImage", backImg);
+                }
                 return;
             }
-            absdiff(backImage, image, diffImage);
             
-            Mat threshold1, threshold255, fixedPoints255, notFixedPoints255, nonChanged, nonChangedPlus1;
-            Mat newFixedPoints255, totalFixedPoints255, totalNonFixedPoints255;
-            Mat tempMat, oldImageMask, newImageMask;
-            Mat newBackImagePoints, oldBackImagePoints;
+            if(showBackImg)
+                checkWindowSetting();
+            
+            absdiff(prevImg, image, diffImage);
+            
+            
             
             threshold(diffImage, threshold1, thresholdValue, 1, CV_THRESH_BINARY_INV);
             threshold(diffImage, threshold255, thresholdValue, 255, CV_THRESH_BINARY_INV);
             
-            if(!checkMat.data) {
-                checkMat = threshold1.clone();
-                return;
+            nonZero = countNonZero(threshold1);
+            nonZeroRatio = nonZero / (image.rows*image.cols);
+            _perfection = perfection;
+            
+            if(nonZeroRatio < percentage) {
+                _perfection = 5;
+                printf("perfection = 5\n");
             }
             
-            threshold(checkMat, fixedPoints255, perfection, 255, CV_THRESH_BINARY);
-            bitwise_not(fixedPoints255, notFixedPoints255);
-            
-            bitwise_and(checkMat, threshold255, nonChanged);
-            add(threshold1, nonChanged, nonChangedPlus1);
-            
-            threshold(nonChangedPlus1, newFixedPoints255, perfection, 255, CV_THRESH_BINARY);
-            bitwise_or(fixedPoints255, newFixedPoints255, totalFixedPoints255);
-            bitwise_not(totalFixedPoints255, totalNonFixedPoints255);
-            
-            bitwise_or(nonChangedPlus1, totalFixedPoints255, tempMat);
-            threshold(tempMat, oldImageMask, 1, 255, CV_THRESH_BINARY);
-            bitwise_not(oldImageMask, newImageMask);
-            
-            bitwise_and(image, image, newBackImagePoints, newImageMask);
-            bitwise_and(backImage, backImage, oldBackImagePoints, oldImageMask);
-            
-            add(newBackImagePoints, oldBackImagePoints, backImage);
-            
-            bitwise_or(nonChangedPlus1, totalFixedPoints255, checkMat);
-            //nonZeroPoints = countNonZero(totalFixedPoints255);
-            
-            
-        }
+            bitwise_and(currentRun, threshold255, nonChanged);
+            add(threshold1, nonChanged, currentRun);
+            compare(currentRun, bestRun, newBestsMask, CV_CMP_GE);
+            compare(currentRun, bestRun, oldBestsMask, CV_CMP_LT);
 
-    public:
+            bitwise_and(currentRun, currentRun, newBestRuns, newBestsMask);
+            bitwise_and(bestRun, bestRun, oldBestRuns, oldBestsMask);
+            add(newBestRuns, oldBestRuns, bestRun);
+
+            bitwise_and(image, image, newBackImgPoints, newBestsMask);
+            bitwise_and(backImg, backImg, oldBackImgPoints, oldBestsMask);
+            add(newBackImgPoints, oldBackImgPoints, backImg);
+
+            compare(bestRun, _perfection, stablePoints, CV_CMP_GT);
+            bitwise_not(stablePoints, unstablePoints);
+            bitwise_and(stablePoints, _perfection, stablePoints);
+            bitwise_and(unstablePoints, bestRun, unstablePoints);
+            add(stablePoints, unstablePoints, bestRun);
+            
+            nonZeroPoints = countNonZero(stablePoints);
+            prevImg = image.clone();
+            if(showBackImg)
+                imshow("backImage", backImg);
+        }
+        
+
+    private:
+        bool showBackImg;
         //int frameDistance;
         int thresholdValue;
         int perfection;
-        //float percentage;
+        float percentage;
         //int minFixedPixel;
-        Mat backImage;
-        Mat checkMat;
+        Mat prevImg;
+        Mat backImg;
+        Mat bestRun;
+        Mat currentRun;
         Mat diffImage;
-        //int nonZeroPoints;
+        int nonZeroPoints;
 };

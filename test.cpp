@@ -21,7 +21,7 @@ int main(int argc, char** argv )
     
     namedWindow("capture", CV_WINDOW_AUTOSIZE );
     
-    BackgroundExtractor be;
+    BackgroundExtractor be(10,100,true);
     Mat frame;
     Mat gray;
     
@@ -32,8 +32,8 @@ int main(int argc, char** argv )
         cvtColor(frame, gray, CV_BGR2GRAY);
         be.feed(gray);
         
-        if(be.backImage.data)
-            imshow("capture", be.backImage);
+        //if(be.backImage.data)
+        //    imshow("capture", be.backImage);
         if(waitKey(30) >= 0) break;
     }
     
