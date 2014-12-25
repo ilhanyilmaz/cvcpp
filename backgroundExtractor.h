@@ -1,16 +1,12 @@
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
 
-#ifndef NULL
-#define NULL 0
-#endif
-
 using namespace cv;
 
 class BackgroundExtractor
 {
     public:
-        BackgroundExtractor( int _threshold=10, int _perfection=100, bool _showBackImg=false) {
+        BackgroundExtractor( int _threshold=5, int _perfection=100, bool _showBackImg=false) {
             //frameDistance = 1;
             thresholdValue = _threshold;
             perfection = _perfection;
@@ -30,7 +26,7 @@ class BackgroundExtractor
         
         Mat loop(Mat image) {
             
-            if(!isDone())
+            //if(!isDone())
                 feed(image);
             return backImg;
         }
@@ -74,7 +70,7 @@ class BackgroundExtractor
             _perfection = perfection;
             
             if(nonZeroRatio < percentage) {
-                _perfection = 30;
+                _perfection = 5;
                 printf("perfection = 10\n");
             }
             
