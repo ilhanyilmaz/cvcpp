@@ -45,7 +45,9 @@ int main(int argc, char** argv )
         int biggestObjectPos = mtb.findBiggestMovingObjectPos();
         if(biggestObjectPos != -1) {
             Point loc = mtb.findObject2dBottom(biggestObjectPos);
-            printf("%i-%i\n",loc.x, loc.y);
+            circle(frame, loc, 10, Scalar(255,0,0));
+            imshow("capture", frame);
+            //printf("%i-%i\n",loc.x, loc.y);
         }
         /*if(diffImg.data)
             imshow("capture", diffImg);
