@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
-//#include "backgroundExtractor.h"
-#include "motionTrackerBack.h"
+#include "motionTrackerHist.h"
 #include <string>
 
 using namespace cv;
@@ -30,9 +29,9 @@ int main(int argc, char** argv )
     
     if(DEBUG)
         namedWindow("capture", CV_WINDOW_AUTOSIZE );
-    
-    //BackgroundExtractor be(10,100,true);
-    MotionTrackerBack mtb(cap, 5, 100);
+    vector<string> posImages;
+    posImages.push_back("./sample/captures/bp.jpg");
+    MotionTrackerHist mtb(cap, posImages);
     
     Mat frame, gray;
     //Mat backImg, diffImg;
@@ -41,9 +40,8 @@ int main(int argc, char** argv )
         cap >> frame;
         if(!frame.data)
             return -1;
-        cvtColor(frame, gray, CV_BGR2GRAY);
+        mtb.update(frame.clone());
         
-        mtb.update(gray);
         mtb.findMovingObjects();
         mtb.drawRectangles();
         int biggestObjectPos = mtb.findBiggestMovingObjectPos();

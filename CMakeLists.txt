@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project( DisplayImage )
+project( SampleHist )
 find_package( OpenCV REQUIRED )
-add_executable( DisplayImage test.cpp )
-target_link_libraries( DisplayImage ${OpenCV_LIBS} )
+add_executable( SampleHist MTSampleHist.cpp )
+target_link_libraries( SampleHist ${OpenCV_LIBS} )
