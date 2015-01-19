@@ -65,7 +65,7 @@ class MotionTrackerHist: public MotionTracker
         }  
         Mat removeBackground(Mat image) {
             int discValue = 10;
-            int threshold = 1;
+            int thresholdValue = 1;
             Mat hsvt;
             cvtColor(image, hsvt, CV_BGR2HSV);
             MatND roiHist;
@@ -77,25 +77,25 @@ class MotionTrackerHist: public MotionTracker
             float hue_range[] = { 0, 180 };
             float sat_range[] = { 0, 256 };
             const float* ranges[] = { hue_range, sat_range };
-            int channels[] = {0, 1};
+            const int channels[] = {0, 1};
             
             for(int i=0; i<posHistograms.size(); i++) {
                 roiHist = posHistograms[i];
-                calcBackProject( &hsvt, 1, channels, roiHist, backproj, &ranges, 1, true );
+                calcBackProject( &hsvt, 1, channels, roiHist, backproj, ranges, 1, true );
                 imshow("dst", backproj);
                 
                 disc = getStructuringElement(MORPH_ELLIPSE,Size(discValue,discValue));
-                filter2D(dst, dst, -1,disc);
+                filter2D(backproj, backproj, -1,disc);
                 
-                threshold(dst, thresh, threshold, 255, THRESH_BINARY_INV);
+                threshold(backproj, thresh, thresholdValue, 255, THRESH_BINARY_INV);
                 mats[0] = thresh;
                 mats[1] = thresh;
                 mats[2] = thresh;
                 
-                mask = merge(mats,3);
-                image = bitwise_and(image,mask,image);
+                merge(mats, 3, mask);
+                bitwise_and(image,mask,image);
             }
-            for(int i=0; i<negHistograms.size(); i++) {
+            /*for(int i=0; i<negHistograms.size(); i++) {
                 roiHist = negHistograms[i];
                 calcBackProject( &hsvt, 1, 1, roiHist, backproj, &ranges, 1, true );
                 imshow("dst", backproj);
@@ -110,7 +110,7 @@ class MotionTrackerHist: public MotionTracker
                 
                 mask = merge(mats,3);
                 image = bitwise_and(image,mask,image);
-            }
+            }*/
             
             imshow("backProj", image);
             return image;
