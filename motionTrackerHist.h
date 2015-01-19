@@ -6,16 +6,20 @@ class MotionTrackerHist: public MotionTracker
     public:
         
         MotionTrackerHist(VideoCapture _cap, vector<string> posHistFile=vector<string>(), vector<string> negHistFile=vector<string>(), bool _showTracker=false, bool _showDiffImg=false):MotionTracker(_cap, _showTracker, _showDiffImg) {
+            
             Mat image;
 
+            
             if(!posHistFile.empty()) {
                 for(int i=0; i<posHistFile.size(); i++) {
+                    printf("opening positive file: %s\n", posHistFile[i].c_str());
                     image = imread(posHistFile[i], CV_LOAD_IMAGE_COLOR);   // Read the file
                     addHistogram(image, "+");
                 }
             }
             if(!negHistFile.empty()) {
                 for(int i=0; i<posHistFile.size(); i++) {
+                    printf("opening negative file: %s\n", posHistFile[i].c_str());
                     image = imread(posHistFile[i], CV_LOAD_IMAGE_COLOR);   // Read the file
                     addHistogram(image, "-");
                 }
@@ -28,14 +32,17 @@ class MotionTrackerHist: public MotionTracker
             blur(frame, frame, Point(blurValue, blurValue));
             
             diffImageRGB = removeBackground(frame);
-            cvtColor(frame, diffImg, CV_BGR2GRAY);
+            cvtColor(diffImageRGB, diffImg, CV_BGR2GRAY);
+            
         }
     
         void addHistogram(Mat crop, string posNeg) {
             
             Mat hsv, hist;
+            MatND roiHist;
+            
             cvtColor(crop, hsv, CV_BGR2HSV);
-            inRange(hsv, Scalar(0., 10.,10.), Scalar(180.,256.,256.), hist);
+            //inRange(hsv, Scalar(0, 10,10), Scalar(180,256,256), hsv);
             
             
             int hbins = 180, sbins = 256;
@@ -46,12 +53,12 @@ class MotionTrackerHist: public MotionTracker
             // 255 (pure spectrum color)
             float sranges[] = { 0, 256 };
             const float* ranges[] = { hranges, sranges };
-            MatND roiHist;
+            
             // we compute the histogram from the 0-th and 1-st channels
             int channels[] = {0, 1};
 
             calcHist( &hsv, 1, channels, Mat(), // do not use mask
-             hist, 2, histSize, ranges,
+             roiHist, 2, histSize, ranges,
              true, // the histogram is uniform
              false );
             
@@ -81,8 +88,26 @@ class MotionTrackerHist: public MotionTracker
             
             for(int i=0; i<posHistograms.size(); i++) {
                 roiHist = posHistograms[i];
+                
                 calcBackProject( &hsvt, 1, channels, roiHist, backproj, ranges, 1, true );
-                imshow("dst", backproj);
+                //imshow("dst", backproj);
+                
+                disc = getStructuringElement(MORPH_ELLIPSE,Size(discValue,discValue));
+                filter2D(backproj, backproj, -1,disc);
+                
+                threshold(backproj, thresh, thresholdValue, 255, THRESH_BINARY);
+                mats[0] = thresh;
+                mats[1] = thresh;
+                mats[2] = thresh;
+                
+                merge(mats, 3, mask);
+                bitwise_and(image,mask,image);
+            }
+            for(int i=0; i<negHistograms.size(); i++) {
+                roiHist = negHistograms[i];
+                
+                calcBackProject( &hsvt, 1, channels, roiHist, backproj, ranges, 1, true );
+                //imshow("dst", backproj);
                 
                 disc = getStructuringElement(MORPH_ELLIPSE,Size(discValue,discValue));
                 filter2D(backproj, backproj, -1,disc);
@@ -95,30 +120,15 @@ class MotionTrackerHist: public MotionTracker
                 merge(mats, 3, mask);
                 bitwise_and(image,mask,image);
             }
-            /*for(int i=0; i<negHistograms.size(); i++) {
-                roiHist = negHistograms[i];
-                calcBackProject( &hsvt, 1, 1, roiHist, backproj, &ranges, 1, true );
-                imshow("dst", backproj);
-                
-                disc = getStructuringElement(MORPH_ELLIPSE,Size(discValue,discValue));
-                filter2D(dst, dst, -1,disc);
-                
-                threshold(dst, thresh, threshold, 255, THRESH_BINARY);
-                mats[0] = thresh;
-                mats[1] = thresh;
-                mats[2] = thresh;
-                
-                mask = merge(mats,3);
-                image = bitwise_and(image,mask,image);
-            }*/
             
-            imshow("backProj", image);
+            //if(showDiffImg)
+                //imshow("diffImg", image);
+                
             return image;
         }
     private:
         vector<MatND> negHistograms;
         vector<MatND> posHistograms;
-        
 };
     
     

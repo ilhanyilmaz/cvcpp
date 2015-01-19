@@ -23,9 +23,12 @@ class MotionTracker {
             showTracker = _showTracker;
             showDiffImg = _showDiffImg;
             cap = _cap;
-            namedWindow("contours", CV_WINDOW_AUTOSIZE );
-            namedWindow("diff image", CV_WINDOW_AUTOSIZE );
-            namedWindow("tracker", CV_WINDOW_AUTOSIZE );
+            
+            //namedWindow("contours", CV_WINDOW_AUTOSIZE );
+            if(showDiffImg)
+                namedWindow("diff image", CV_WINDOW_AUTOSIZE );
+            if(showTracker)
+                namedWindow("tracker", CV_WINDOW_AUTOSIZE );
         }
         
         void findMovingObjects() {
@@ -33,9 +36,10 @@ class MotionTracker {
             Mat tDiffImg, tDiffImgHigh, tDiffImgLow;
             Mat element;
             
-            if(!diffImg.data)
-                return;
             
+            if(!diffImg.data)
+                return;    
+                
             threshold(diffImg, tDiffImgHigh, thresholdHigher, 128, CV_THRESH_BINARY);
             threshold(diffImg, tDiffImgLow, thresholdLower, 127, CV_THRESH_BINARY);
             add(tDiffImgHigh, tDiffImgLow, tDiffImg);
@@ -49,7 +53,8 @@ class MotionTracker {
             morphologyEx( tDiffImg, tDiffImg, OP_CLOSE, element );
             
             if(showDiffImg)
-                imshow("diff image", tDiffImg);
+                imshow("tDiffImg", tDiffImg);
+                            
                 
             Mat canny_output;
 
@@ -76,7 +81,7 @@ class MotionTracker {
                 
             }
             /// Show in a window 
-            imshow("contours", frame);
+            //imshow("contours", frame);
             
         }
         Rect findNonZeroBoundary(Mat img, Rect rect) {
@@ -139,7 +144,8 @@ class MotionTracker {
                 rectangle(trackerImg, Point(rectangles[i].x,rectangles[i].y), Point(rectangles[i].x+rectangles[i].width,rectangles[i].y+rectangles[i].height),255);
                 //printf("%i-%i / %i-%i\n",rectangles[i].x,rectangles[i].y,rectangles[i].width,rectangles[i].height);
             }
-            imshow("tracker", trackerImg);
+            if(showTracker)
+                imshow("tracker", trackerImg);
         }
         
         

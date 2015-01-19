@@ -5,7 +5,7 @@
 
 using namespace cv;
 
-#define DEBUG 1
+#define DEBUG 0
 
 int main(int argc, char** argv )
 {
@@ -28,10 +28,10 @@ int main(int argc, char** argv )
     //cap.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
     
     if(DEBUG)
-        namedWindow("capture", CV_WINDOW_AUTOSIZE );
+    namedWindow("capture", CV_WINDOW_AUTOSIZE );
     vector<string> posImages;
-    posImages.push_back("./sample/captures/bp.jpg");
-    MotionTrackerHist mtb(cap, posImages);
+    posImages.push_back("./sample/captures/kitap.jpg");
+    MotionTrackerHist mtb(cap, posImages, vector<string>(), false, false);
     
     Mat frame, gray;
     //Mat backImg, diffImg;
@@ -40,9 +40,10 @@ int main(int argc, char** argv )
         cap >> frame;
         if(!frame.data)
             return -1;
-        mtb.update(frame.clone());
         
+        mtb.update(frame.clone());
         mtb.findMovingObjects();
+        
         mtb.drawRectangles();
         int biggestObjectPos = mtb.findBiggestMovingObjectPos();
         if(biggestObjectPos != -1) {
@@ -51,13 +52,10 @@ int main(int argc, char** argv )
                 circle(frame, loc, 10, Scalar(255,0,0));
                 imshow("capture", frame);
             }
-            //printf("%i-%i\n",loc.x, loc.y);
+            printf("%i-%i\n",loc.x, loc.y);
         }
-        /*if(diffImg.data)
-            imshow("capture", diffImg);
-          */  
         
-        //if(DEBUG)
+        
         keyCode = waitKey(30);
         if(keyCode == 1048608) { // space
                 
