@@ -5,7 +5,7 @@
 
 using namespace cv;
 
-#define DEBUG 0
+#define DEBUG 1
 
 int main(int argc, char** argv )
 {
@@ -14,9 +14,16 @@ int main(int argc, char** argv )
     if ( argc == 2 )
     {
         string filepath = argv[1];
-        //printf("%s\n",argv[1]);
-        cap.open(filepath);
-        //printf("usage: DisplayImage.out <Image_Path>\n");
+        printf("%s\n",argv[1]);
+        
+        if(argv[1] == "homestream")
+            cap.open("http://192.168.1.21:8080?action=stream");
+        else if(argv[1] == "workstream")
+            cap.open("http://192.168.254.116:8080?action=stream");
+        else if(argv[1] == "androidstream")
+            cap.open("http://192.168.43.116:8080?action=stream");
+        else
+            cap.open(argv[1]);
     }
     else
         cap.open(0);
@@ -28,7 +35,7 @@ int main(int argc, char** argv )
     //cap.set(CV_CAP_PROP_FRAME_HEIGHT, 240);
     
     if(DEBUG)
-    namedWindow("capture", CV_WINDOW_AUTOSIZE );
+        namedWindow("capture", CV_WINDOW_AUTOSIZE );
     vector<string> posImages;
     posImages.push_back("./sample/captures/kitap.jpg");
     MotionTrackerHist mtb(cap, posImages, vector<string>(), false, false);
@@ -40,6 +47,8 @@ int main(int argc, char** argv )
         cap >> frame;
         if(!frame.data)
             return -1;
+        
+        imshow("capture", frame);
         
         mtb.update(frame.clone());
         mtb.findMovingObjects();
@@ -56,7 +65,7 @@ int main(int argc, char** argv )
         }
         
         
-        keyCode = waitKey(30);
+        keyCode = waitKey(10);
         if(keyCode == 1048608) { // space
                 
         }
